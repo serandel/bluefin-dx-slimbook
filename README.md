@@ -1,5 +1,7 @@
 # Bluefin DX Slimbook
 
+[![Build and Push](https://github.com/serandel/bluefin-dx-slimbook/actions/workflows/build.yml/badge.svg)](https://github.com/serandel/bluefin-dx-slimbook/actions/workflows/build.yml)
+
 Custom [Bluefin DX](https://projectbluefin.io/) image with [Slimbook](https://slimbook.com/) laptop support.
 
 ## What's included
