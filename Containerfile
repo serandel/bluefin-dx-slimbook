@@ -9,9 +9,16 @@ RUN KERNEL_VERSION=$(rpm -qa kernel --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}
     echo "Building for kernel: ${KERNEL_VERSION}" && \
     echo "${KERNEL_VERSION}" > /tmp/kernel-version.txt
 
-# Install kernel-devel to enable akmod building
-# This is the key step that allows akmods to compile during image build
-RUN dnf install -y kernel-devel-$(cat /tmp/kernel-version.txt) && \
+# Install REAL kernel-devel to enable akmod building
+# Bluefin has a stub kernel-devel (RPM registered but no files), so we need to:
+# 1. Remove the stub entry from the RPM database
+# 2. Reinstall the actual package with files
+RUN KVER=$(cat /tmp/kernel-version.txt) && \
+    echo "Removing stub kernel-devel..." && \
+    rpm -e --nodeps kernel-devel-${KVER} || true && \
+    echo "Installing real kernel-devel..." && \
+    dnf install -y kernel-devel-${KVER} && \
+    echo "Verifying kernel headers exist..." && \
     ls -la /usr/src/kernels/
 
 # Add Slimbook repository
