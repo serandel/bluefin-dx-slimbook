@@ -58,7 +58,12 @@ RUN rm -f /tmp/kernel-version.txt
 ARG SLIMBOOK_DIGEST=unknown
 RUN CURRENT_VERSION=$(grep '^VERSION=' /usr/lib/os-release | cut -d'"' -f2) && \
     SLIMBOOK_SHORT=$(echo "${SLIMBOOK_DIGEST}" | cut -c1-12) && \
-    sed -i "s/^PRETTY_NAME=.*/PRETTY_NAME=\"Bluefin DX Slimbook ($CURRENT_VERSION + Slimbook ${SLIMBOOK_SHORT})\"/" /usr/lib/os-release
+    NEW_VERSION="${CURRENT_VERSION} + Slimbook ${SLIMBOOK_SHORT}" && \
+    sed -i "s/^NAME=.*/NAME=\"Bluefin DX Slimbook\"/" /usr/lib/os-release && \
+    sed -i "s/^VERSION=.*/VERSION=\"${NEW_VERSION}\"/" /usr/lib/os-release && \
+    sed -i "s/^PRETTY_NAME=.*/PRETTY_NAME=\"Bluefin DX Slimbook (${NEW_VERSION})\"/" /usr/lib/os-release && \
+    sed -i "s/^VARIANT_ID=.*/VARIANT_ID=bluefin-dx-slimbook/" /usr/lib/os-release && \
+    sed -i "s|^HOME_URL=.*|HOME_URL=\"https://github.com/serandel/bluefin-dx-slimbook\"|" /usr/lib/os-release
 
 # Standard ostree container commit
 RUN ostree container commit
