@@ -29,6 +29,7 @@ jobs:
       should_build: ${{ steps.check.outputs.should_build }}
       bluefin_version: ${{ steps.bluefin-version.outputs.bluefin_version }}
       bluefin_digest: ${{ steps.bluefin-version.outputs.bluefin_digest }}
+      slimbook_versions_hash: ${{ steps.slimbook-versions.outputs.slimbook_versions_hash }}
 
     steps:
       - name: Get Bluefin version info
@@ -43,6 +44,29 @@ jobs:
           echo "bluefin_version=${BLUEFIN_VERSION}" >> $GITHUB_OUTPUT
           echo "Upstream Bluefin DX version: ${BLUEFIN_VERSION}"
           echo "Upstream Bluefin DX digest: ${BLUEFIN_DIGEST}"
+
+      - name: Get Slimbook package versions
+        id: slimbook-versions
+        run: |
+          # Detect Fedora version from the base image
+          FEDORA_VERSION=$(skopeo inspect docker://ghcr.io/ublue-os/bluefin-dx:stable | jq -r '.Labels["ostree.linux"]' | grep -oP 'fc\K[0-9]+' || echo "43")
+          echo "Detected Fedora version: ${FEDORA_VERSION}"
+
+          # Query available versions from the Slimbook repo
+          VERSIONS=$(podman run --rm fedora:${FEDORA_VERSION} bash -c "
+            dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/home:/Slimbook/Fedora_${FEDORA_VERSION}/home:Slimbook.repo 2>/dev/null
+            dnf repoquery --latest-limit=1 \
+              slimbook-meta-common \
+              slimbook-meta-evo \
+              slimbook-meta-gnome \
+              slimbook-service \
+              slimbook-qc71-kmod \
+              slimbook-qc71-kmod-common \
+              --qf '%{name}-%{version}-%{release}' 2>/dev/null
+          " | sort | sha256sum | cut -d' ' -f1)
+
+          echo "slimbook_versions_hash=${VERSIONS}" >> $GITHUB_OUTPUT
+          echo "Slimbook packages hash: ${VERSIONS}"
 
       - name: Check if rebuild is needed
         id: check
@@ -64,19 +88,31 @@ jobs:
           # For scheduled runs, check if our image exists and has the same base digest
           echo "Checking if our image needs updating..."
 
-          # Try to get our current image's base digest label
+          # Try to get our current image's labels
           OUR_BASE_DIGEST=$(skopeo inspect docker://${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest 2>/dev/null | jq -r '.Labels["org.opencontainers.image.base.digest"]' || echo "not-found")
+          OUR_SLIMBOOK_HASH=$(skopeo inspect docker://${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest 2>/dev/null | jq -r '.Labels["slimbook.packages.hash"]' || echo "not-found")
 
           echo "Our image's base digest: ${OUR_BASE_DIGEST}"
           echo "Upstream base digest: ${{ steps.bluefin-version.outputs.bluefin_digest }}"
+          echo "Our Slimbook packages hash: ${OUR_SLIMBOOK_HASH}"
+          echo "Current Slimbook packages hash: ${{ steps.slimbook-versions.outputs.slimbook_versions_hash }}"
 
-          if [[ "${OUR_BASE_DIGEST}" == "${{ steps.bluefin-version.outputs.bluefin_digest }}" ]]; then
-            echo "Base image unchanged - skipping build"
-            echo "should_build=false" >> $GITHUB_OUTPUT
-          else
+          # Check if base image changed
+          if [[ "${OUR_BASE_DIGEST}" != "${{ steps.bluefin-version.outputs.bluefin_digest }}" ]]; then
             echo "Base image changed or our image doesn't exist - rebuilding"
             echo "should_build=true" >> $GITHUB_OUTPUT
+            exit 0
           fi
+
+          # Check if Slimbook packages changed
+          if [[ "${OUR_SLIMBOOK_HASH}" != "${{ steps.slimbook-versions.outputs.slimbook_versions_hash }}" ]]; then
+            echo "Slimbook packages changed - rebuilding"
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Base image and packages unchanged - skipping build"
+          echo "should_build=false" >> $GITHUB_OUTPUT
 
   build:
     runs-on: ubuntu-latest
@@ -123,3 +159,4 @@ jobs:
             io.artifacthub.package.readme-url=https://raw.githubusercontent.com/${{ github.repository }}/main/README.md
             org.opencontainers.image.base.name=ghcr.io/ublue-os/bluefin-dx:stable
             org.opencontainers.image.base.digest=${{ needs.check.outputs.bluefin_digest }}
+            slimbook.packages.hash=${{ needs.check.outputs.slimbook_versions_hash }}
