@@ -54,5 +54,11 @@ RUN dnf remove -y kernel-devel && dnf clean all
 # Clean up temp files
 RUN rm -f /tmp/kernel-version.txt
 
+# Customize os-release for bootloader branding with Slimbook package digest
+ARG SLIMBOOK_DIGEST=unknown
+RUN CURRENT_VERSION=$(grep '^VERSION=' /usr/lib/os-release | cut -d'"' -f2) && \
+    SLIMBOOK_SHORT=$(echo "${SLIMBOOK_DIGEST}" | cut -c1-12) && \
+    sed -i "s/^PRETTY_NAME=.*/PRETTY_NAME=\"Bluefin DX Slimbook ($CURRENT_VERSION + Slimbook ${SLIMBOOK_SHORT})\"/" /usr/lib/os-release
+
 # Standard ostree container commit
 RUN ostree container commit

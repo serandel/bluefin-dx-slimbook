@@ -152,6 +152,8 @@ jobs:
           file: ./Containerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            SLIMBOOK_DIGEST=${{ needs.check.outputs.slimbook_versions_hash }}
           labels: |
             org.opencontainers.image.title=Bluefin DX Slimbook
             org.opencontainers.image.description=Custom Bluefin DX with Slimbook laptop support
