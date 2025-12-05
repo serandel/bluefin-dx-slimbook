@@ -14,6 +14,8 @@ This image adds the following Slimbook packages on top of Bluefin DX:
 - `slimbook-service` - Slimbook system service
 - `slimbook-qc71-kmod` - Kernel module for QC71-based laptops (fan control, lightbar, performance modes)
 - `slimbook-qc71-kmod-common` - Common files for the QC71 kernel module
+- `slimbook-yt6801-kmod` - Kernel module for YT6801 Ethernet controller
+- `slimbook-yt6801-kmod-common` - Common files for the YT6801 kernel module
 
 ## Usage
 

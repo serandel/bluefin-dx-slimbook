@@ -62,6 +62,8 @@ jobs:
               slimbook-service \
               slimbook-qc71-kmod \
               slimbook-qc71-kmod-common \
+              slimbook-yt6801-kmod \
+              slimbook-yt6801-kmod-common \
               --qf '%{name}-%{version}-%{release}' 2>/dev/null
           " | sort | sha256sum | cut -d' ' -f1)
 
