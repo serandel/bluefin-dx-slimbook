@@ -8,6 +8,8 @@ Custom [Bluefin DX](https://projectbluefin.io/) image with [Slimbook](https://sl
 
 This image adds the following Slimbook packages on top of Bluefin DX:
 
+- `slimbook-meta-common` - Common Slimbook meta package
+- `slimbook-meta-evo` - Meta package for Slimbook Evo series support
 - `slimbook-meta-gnome` - Meta package for GNOME desktop integration
 - `slimbook-service` - Slimbook system service
 - `slimbook-qc71-kmod` - Kernel module for QC71-based laptops (fan control, lightbar, performance modes)
@@ -25,7 +27,9 @@ Then reboot.
 
 ### Updates
 
-Updates work the same as regular Bluefin - the image is rebuilt automatically when upstream Bluefin updates.
+Updates work the same as regular Bluefin - the image is rebuilt automatically when:
+- Upstream Bluefin updates
+- Slimbook packages update in the openSUSE repository
 
 ## Building locally
 
