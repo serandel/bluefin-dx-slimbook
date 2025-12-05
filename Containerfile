@@ -25,13 +25,23 @@ RUN KVER=$(cat /tmp/kernel-version.txt) && \
 RUN dnf config-manager addrepo --from-repofile=https://download.opensuse.org/repositories/home:/Slimbook/Fedora_$(rpm -E %fedora)/home:Slimbook.repo
 
 # Install Slimbook packages
-# The akmod will build during this step since kernel-devel is now available
-RUN dnf install -y \
+# Use noscripts to prevent akmod post-install from running as root (which fails)
+RUN dnf install -y --setopt=tsflags=noscripts \
     slimbook-meta-gnome \
     slimbook-service \
     slimbook-qc71-kmod \
-    slimbook-qc71-kmod-common \
-    && dnf clean all
+    slimbook-qc71-kmod-common
+
+# Build the kernel module RPM as non-root user, then install as root
+# akmods refuses to build as root, but needs root to install - so we split the steps
+# Need to ensure akmods user has writable home/working directory for rpmbuild
+RUN KVER=$(cat /tmp/kernel-version.txt) && \
+    echo "Building akmod RPM for kernel ${KVER}..." && \
+    SRPM=$(ls /usr/src/akmods/slimbook-qc71-kmod-*.src.rpm) && \
+    mkdir -p /var/lib/akmods && chown akmods:akmods /var/lib/akmods && \
+    su -s /bin/bash akmods -c "cd /var/lib/akmods && HOME=/var/lib/akmods akmodsbuild --target $(uname -m) --kernels ${KVER} ${SRPM}" && \
+    echo "Installing built kmod RPM..." && \
+    dnf install -y /var/lib/akmods/kmod-slimbook-qc71-${KVER}-*.rpm
 
 # Verify the kernel module was built
 RUN ls -la /usr/lib/modules/$(cat /tmp/kernel-version.txt)/extra/ || echo "Checking module location..."
