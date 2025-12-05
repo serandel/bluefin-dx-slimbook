@@ -27,6 +27,8 @@ RUN dnf config-manager addrepo --from-repofile=https://download.opensuse.org/rep
 # Install Slimbook packages
 # Use noscripts to prevent akmod post-install from running as root (which fails)
 RUN dnf install -y --setopt=tsflags=noscripts \
+    slimbook-meta-common \
+    slimbook-meta-evo \
     slimbook-meta-gnome \
     slimbook-service \
     slimbook-qc71-kmod \
