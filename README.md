@@ -45,6 +45,8 @@ Bluefin (and other Fedora Atomic distributions) can't build akmods at install ti
 
 See also: [ublue-os/akmods#431](https://github.com/ublue-os/akmods/issues/431) - Request to add Slimbook support to the official uBlue akmods.
 
+In the mean time, we need the Slimbook akmods to properly control and report the fans speed or to work with the Ethernet port, for example.
+
 ## Credits
 
 - [Universal Blue](https://universal-blue.org/) for Bluefin
