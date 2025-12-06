@@ -39,18 +39,18 @@ RUN <<-EOF
     # Build the kernel module RPM as non-root user, then install as root
     # akmods refuses to build as root, but needs root to install - so we split the steps
     # Need to ensure akmods user has writable home/working directory for rpmbuild
-    echo "Building akmod RPM for kernel ${KVER}..." && \
-    SRPM=$(ls /usr/src/akmods/slimbook-qc71-kmod-*.src.rpm) && \
-    mkdir -p /var/lib/akmods && chown akmods:akmods /var/lib/akmods && \
-    su -s /bin/bash akmods -c "cd /var/lib/akmods && HOME=/var/lib/akmods akmodsbuild --target $(uname -m) --kernels ${KVER} ${SRPM}" && \
-    echo "Installing built kmod RPM..." && \
+    echo "Building akmod RPM for kernel ${KVER}..."
+    SRPM=$(ls /usr/src/akmods/slimbook-qc71-kmod-*.src.rpm) 
+    mkdir -p /var/lib/akmods && chown akmods:akmods /var/lib/akmods
+    su -s /bin/bash akmods -c "cd /var/lib/akmods && HOME=/var/lib/akmods akmodsbuild --target $(uname -m) --kernels ${KVER} ${SRPM}"
+    echo "Installing built kmod RPM..."
     dnf install -y /var/lib/akmods/kmod-slimbook-qc71-${KVER}-*.rpm
 
     # Build the slimbook-yt6801 kernel module RPM
-    echo "Building yt6801 akmod RPM for kernel ${KVER}..." && \
-    SRPM=$(ls /usr/src/akmods/slimbook-yt6801-kmod-*.src.rpm) && \
-    su -s /bin/bash akmods -c "cd /var/lib/akmods && HOME=/var/lib/akmods akmodsbuild --target $(uname -m) --kernels ${KVER} ${SRPM}" && \
-    echo "Installing built yt6801 kmod RPM..." && \
+    echo "Building yt6801 akmod RPM for kernel ${KVER}..." 
+    SRPM=$(ls /usr/src/akmods/slimbook-yt6801-kmod-*.src.rpm)
+    su -s /bin/bash akmods -c "cd /var/lib/akmods && HOME=/var/lib/akmods akmodsbuild --target $(uname -m) --kernels ${KVER} ${SRPM}"
+    echo "Installing built yt6801 kmod RPM..."
     dnf install -y /var/lib/akmods/kmod-slimbook-yt6801-${KVER}-*.rpm
 
     # Verify the kernel modules were built
