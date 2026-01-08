@@ -39,9 +39,11 @@ RUN dnf install -y --setopt=tsflags=noscripts \
 # Build the kernel module RPM as non-root user, then install as root
 # akmods refuses to build as root, but needs root to install - so we split the steps
 # Need to ensure akmods user has writable home/working directory for rpmbuild
+# Fix /tmp permissions for buildx environments where it may not be world-writable
 RUN KVER=$(cat /tmp/kernel-version.txt) && \
     echo "Building akmod RPM for kernel ${KVER}..." && \
     SRPM=$(ls /usr/src/akmods/slimbook-qc71-kmod-*.src.rpm) && \
+    chmod 1777 /tmp && \
     mkdir -p /var/lib/akmods && chown akmods:akmods /var/lib/akmods && \
     su -s /bin/bash akmods -c "cd /var/lib/akmods && HOME=/var/lib/akmods akmodsbuild --target $(uname -m) --kernels ${KVER} ${SRPM}" && \
     echo "Installing built kmod RPM..." && \
